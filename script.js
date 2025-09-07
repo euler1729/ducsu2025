@@ -307,27 +307,40 @@ function calculateProbabilities(panel) {
 
 // Statistical normalization with proper probability distribution
 function normalizeToProperProbabilities(panelProbs) {
-    const total = panelProbs.reduce((sum, p) => sum + p.probs.overall, 0);
+    // Compute raw totals for each metric so we can normalize per-position
+    const totalOverallRaw = panelProbs.reduce((sum, p) => sum + p.probs.overall, 0);
+    const totalVPRaw = panelProbs.reduce((sum, p) => sum + p.probs.vp, 0);
+    const totalGSRaw = panelProbs.reduce((sum, p) => sum + p.probs.gs, 0);
+    const totalAGSRaw = panelProbs.reduce((sum, p) => sum + p.probs.ags, 0);
+
+    // z-score for 90% CI
+    const z90 = 1.645;
 
     return panelProbs.map(p => {
-        const normalizedProb = (p.probs.overall / total) * 100;
+        // Normalize each metric separately to ensure sums = 100% per metric
+        const overall = totalOverallRaw > 0 ? (p.probs.overall / totalOverallRaw) * 100 : 0;
+        const vp = totalVPRaw > 0 ? (p.probs.vp / totalVPRaw) * 100 : 0;
+        const gs = totalGSRaw > 0 ? (p.probs.gs / totalGSRaw) * 100 : 0;
+        const ags = totalAGSRaw > 0 ? (p.probs.ags / totalAGSRaw) * 100 : 0;
 
-        // Calculate confidence intervals using uncertainty
-        const marginOfError = normalizedProb * p.probs.uncertainty * 1.645; // 90% CI
-        const lowerBound = Math.max(0, normalizedProb - marginOfError);
-        const upperBound = Math.min(100, normalizedProb + marginOfError);
+        // Use panel-level uncertainty (panel.uncertainty) to compute margin of error on the normalized overall
+        const uncertainty = typeof p.uncertainty === 'number' ? p.uncertainty : (p.probs && p.probs.uncertainty) || 0.2;
+        const marginOfError = Math.min(100, overall * uncertainty * z90);
+
+        const lowerBound = Math.max(0, overall - marginOfError);
+        const upperBound = Math.min(100, overall + marginOfError);
 
         return {
             ...p,
             probs: {
                 ...p.probs,
-                overall: normalizedProb,
-                vp: (p.probs.vp / total) * 100,
-                gs: (p.probs.gs / total) * 100,
-                ags: (p.probs.ags / total) * 100,
-                lowerBound: lowerBound,
-                upperBound: upperBound,
-                marginOfError: marginOfError
+                overall: Number(overall.toFixed(3)),
+                vp: Number(vp.toFixed(3)),
+                gs: Number(gs.toFixed(3)),
+                ags: Number(ags.toFixed(3)),
+                lowerBound: Number(lowerBound.toFixed(3)),
+                upperBound: Number(upperBound.toFixed(3)),
+                marginOfError: Number(marginOfError.toFixed(3))
             }
         };
     });
@@ -594,10 +607,10 @@ function updateComparisonTable(panelResults) {
             label: 'Uncertainty Factor',
             values: panelResults.map(p => `${(p.probs.uncertainty * 100).toFixed(0)}%`)
         },
-        {
-            label: 'Historical Performance',
-            values: panelResults.map(p => `${(p.historical_performance * 100).toFixed(0)}%`)
-        }
+        // {
+        //     label: 'Historical Performance',
+        //     values: panelResults.map(p => `${(p.historical_performance * 100).toFixed(0)}%`)
+        // }
     ];
 
     let tableHTML = headerRow;
