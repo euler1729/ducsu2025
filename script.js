@@ -636,7 +636,7 @@ function updateInsights(panelResults, monteCarloResults) {
     insights.push(`📊 <strong>Statistical Framework:</strong> This model uses Bayesian probability theory combined with Monte Carlo simulations (n=${MONTE_CARLO_ITERATIONS}) to estimate winning probabilities. ${leader.party} leads with ${leader.probs.overall.toFixed(1)}% probability (90% CI: ${leader.probs.lowerBound.toFixed(1)}%-${leader.probs.upperBound.toFixed(1)}%), meaning they would win approximately ${Math.round(leader.probs.overall)} out of 100 identical elections.`);
 
     // Confidence interval explanation
-    insights.push(`🎯 <strong>Uncertainty Analysis:</strong> The ±${leader.probs.marginOfError.toFixed(1)}% margin of error reflects genuine electoral uncertainty. With ${UNDECIDED_VOTER_PERCENTAGE}% undecided voters (${Math.round(TOTAL_REGISTERED_VOTERS * 0.485).toLocaleString()} people), the race remains highly volatile. We're 90% confident the true probability lies within the stated ranges.`);
+    insights.push(`🎯 <strong>Uncertainty Analysis:</strong> The ±${leader.probs.marginOfError.toFixed(1)}% margin of error reflects genuine electoral uncertainty. With ${UNDECIDED_VOTER_PERCENTAGE}% undecided voters (${Math.round(TOTAL_REGISTERED_VOTERS * 0.48).toLocaleString()} people), the race remains highly volatile. We're 90% confident the true probability lies within the stated ranges.`);
 
     // Scenario-specific insights
     const scenarioDescription = scenarios[currentScenario].description;
